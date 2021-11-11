@@ -84,7 +84,11 @@ export const HistoricalGraph: React.FC<HistoricalGraphProps> = ({
   const d = useHistoricalPath()
 
   return (
-    <LineChartWrapper showTimer={showTimer} ref={ref}>
+    <LineChartWrapper
+      showTimer={showTimer}
+      ref={ref}
+      data-testid="historical-graph"
+    >
       <Svg>
         <Path
           stroke="#737987"

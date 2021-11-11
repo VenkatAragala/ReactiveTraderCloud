@@ -61,7 +61,7 @@ interface Props {
 const Tile: React.FC<Props> = ({ isAnalytics }) => {
   useIsSymbolDataStale()
   const rfq = useRfqState()
-  const { supportsTearOut } = useTileContext()
+  const { supportsTearOut, currencyPair } = useTileContext()
   const timerData =
     rfq.stage === QuoteStateStage.Received
       ? { start: rfq.payload.time, end: rfq.payload.time + rfq.payload.timeout }
@@ -81,7 +81,10 @@ const Tile: React.FC<Props> = ({ isAnalytics }) => {
   }
 
   return (
-    <PanelItem shouldMoveDate={supportsTearOut}>
+    <PanelItem
+      shouldMoveDate={supportsTearOut}
+      data-testid={`tile-${currencyPair.symbol}`}
+    >
       <Main>
         <Header />
         <Body isAnalyticsView={isAnalytics} showTimer={!!timerData}>

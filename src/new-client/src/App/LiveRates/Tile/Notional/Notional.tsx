@@ -102,6 +102,7 @@ export const NotionalInput: React.FC = () => {
         onClick={() => {
           onChangeNotionalValue(symbol, defaultNotional.toString(10))
         }}
+        data-testid={`notional-reset-${symbol}`}
       >
         <FaRedo className="flipHorizontal" />
       </ResetInputValue>
