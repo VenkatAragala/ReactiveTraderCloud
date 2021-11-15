@@ -74,8 +74,8 @@ describe("Trade Execution", () => {
 
   describe("When executing a trade", () => {
     executeTrade(symbol, "BUY")
-    tradeResponse(symbol, "BUY", "EUR", "500,000")
-    closeTradeReponse(symbol, "BUY", "EUR", "500,000")
+    tradeResponse(symbol, "BUY", "EUR", "1,000,000")
+    closeTradeReponse(symbol, "BUY", "EUR", "1,000,000")
   })
 
   describe("When symbol can not be traded", () => {
