@@ -1,6 +1,6 @@
 describe("Trades", () => {
   before(() => {
-    cy.visit("http://localhost:1920")
+    cy.visit("http://localhost:1917")
   })
 
   var keyWords = [
@@ -21,20 +21,16 @@ describe("Trades", () => {
   ]
   var randomItem = keyWords[Math.floor(Math.random() * keyWords.length)]
 
-  // Gives a random string which is in the Trades blotter,
-  // Results are shown if it matches with the string in the section
   it("Should search trades using the filter", () => {
     cy.get(".sc-igOmtu").type(randomItem)
     cy.wait(1000)
     cy.get(".sc-gGuRsA > svg > path").click()
   })
 
-  //Check the .CSV file is downloaded
   it("Should download .CSV file", () => {
     cy.get(".svg-size").click()
   })
 
-  //Check CSV file is downloaded when filter is applied
   it("should download .CSV file when filter is applied", () => {
     cy.get(".sc-igOmtu").type(randomItem)
     cy.wait(2000)

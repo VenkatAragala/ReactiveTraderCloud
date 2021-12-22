@@ -1,6 +1,6 @@
 describe("Trades", () => {
   before(() => {
-    cy.visit("http://localhost:1920")
+    cy.visit("http://localhost:1917")
   })
 
   it("Should be able to click on Adaptive Icon which navigates to the Adaptive hoempage", () => {
