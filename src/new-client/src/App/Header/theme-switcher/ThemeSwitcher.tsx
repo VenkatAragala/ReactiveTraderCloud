@@ -39,7 +39,7 @@ const ThemeStorageSwitch: React.FC<ThemeStorageSwitchProps & { theme: Theme }> =
     }
 
     return (
-      <SwitchContainer {...eventHandlers}>
+      <SwitchContainer {...eventHandlers} data-testid="theme-toggle-switch">
         {hover ? (
           <Switch
             onChange={toggleTheme}
