@@ -20,17 +20,110 @@
 // -- This is a dual command --
 
 import { isExportDeclaration } from "typescript"
+import BlotterPage from '../pages/BlotterPage'
+
+
+const blotterPage = new BlotterPage();
 
 // Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
 
-Cypress.Commands.add('VerifySuccessTradeExecution', (currency, quantity, direction) => {
 
-  var currentPrice = ''
-  var date;
-  var confirmationText
-  var textList
-  var finalList = []
-  var finalAmount = 0
+Cypress.Commands.add('VerifyCurrencyOnPage', (combination) => {
+  let currency = combination.replace('/','')
+
+  cy.log('').then(() => { 
+  cy.get('div[data-testid="tile-' + currency + '"]').scrollIntoView().should('be.visible');
+  })
+
+
+})
+
+Cypress.Commands.add('VerifySuccessTradeExecution', (combination, quantity, direction) => {
+
+  let currentPrice = ''
+  let textList
+  let finalList = []
+  let finalAmount = 0
+  const dayjs = require('dayjs')
+  var currentYear = dayjs().get('year')
+  let currency = combination.replace('/','')
+
+  cy.log('').then(() => { 
+  cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2) div:nth-child(2) input').clear().type(quantity)
+  cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2)  > div:nth-child(2) > div > button[direction=' + direction + '] > div > div').each((el, index, list) => {
+    if (index == 0) {
+      currentPrice = el.find('div:nth-child(2)').text()
+    }
+    else {
+
+      currentPrice = currentPrice + el.text()
+    }
+
+
+  })
+})
+
+  cy.log('').then(() => {
+
+    cy.log('current price is ' + currentPrice)
+    finalAmount = Number(currentPrice) * Number(quantity)
+
+  })
+
+
+  cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2)  > div:nth-child(2) > div > button[direction=' + direction + ']').click({ force: true })
+  cy.wait(5000)
+  // cy.get('html:root').eq(0).invoke('prop', 'innerHTML').then((doc) => {
+  //   cy.writeFile('pageMarkup.html', doc);
+  // });
+  cy.get('div[data-testid=tile-' + currency + '] div[role=dialog] > div:nth-child(2)').then((el) => {
+
+    
+    let tradeIDList = el.text().split(' ')
+    finalList.push(tradeIDList[2])
+
+  })
+  cy.get('div[data-testid=tile-' + currency + '] div[role=dialog] > div[role=alert]').then((el) => {
+
+   
+    cy.log("Confirmation text " + el.text())
+    //You bought EUR 30,000 at a rate of 1.36348 for USD 40,904.4 settling (Spt) 25 Jan.
+
+    textList = el.text().split(' ')
+    finalList.push('Done')
+    finalList.push(textList[14]+"-"+textList[15].replace('.','')+"-"+currentYear)
+    finalList.push(direction)
+    finalList.push(textList[2] + textList[10])
+    if(direction == 'Buy') {
+    finalList.push(textList[2])
+    }
+    else {
+      finalList.push(textList[10])
+    }
+    finalList.push(textList[3])
+    finalList.push(textList[8])
+    finalList.push(textList[14]+"-"+textList[15].replace('.','')+"-"+currentYear)
+    finalList.push('JPW')
+
+
+    expect(Number(currentPrice)).to.eq(Number(finalList[7]))
+    expect(Number(quantity)).to.eq(Number(textList[3].replace(/,/g, '')))
+    expect(Math.round(Number(finalAmount))).to.eq(Math.round(Number(textList[11].replace(/,/g, ''))))
+    expect(currency).to.eq(textList[2] + textList[10])
+
+    cy.task('setListTrade',finalList);
+    
+
+  })
+
+})
+
+Cypress.Commands.add('VerifyRejectedTradeExecution', (currency, quantity, direction) => {
+
+  let finalList = []
+  const dayjs = require('dayjs')
+  let currentYear = dayjs().subtract(1,'day').format('DD-MMM-YYYY')
+  let currentPrice =''
 
   cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2) div:nth-child(2) input').clear().type(quantity)
   cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2)  > div:nth-child(2) > div > button[direction=' + direction + '] > div > div').each((el, index, list) => {
@@ -45,90 +138,82 @@ Cypress.Commands.add('VerifySuccessTradeExecution', (currency, quantity, directi
 
   })
 
-  cy.log('').then(() => {
-
-    cy.log('current price is ' + currentPrice)
-    finalAmount = Number(currentPrice) * Number(quantity)
-
-  })
-
-
   cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2)  > div:nth-child(2) > div > button[direction=' + direction + ']').click({ force: true })
   cy.wait(2000)
-  // cy.get('html:root').eq(0).invoke('prop', 'innerHTML').then((doc) => {
-  //   cy.writeFile('pageMarkup.html', doc);
-  // });
-  cy.get('div[data-testid=tile-' + currency + '] div[role=dialog] > div:nth-child(2)').then((el) => {
 
-    var tradeID = el.text()
-    var tradeIDList = tradeID.split(' ')
-    finalList.push(tradeIDList[2])
-
-  })
-  cy.get('div[data-testid=tile-' + currency + '] div[role=dialog] > div[role=alert]').then((el) => {
-
-    confirmationText = el.text()
-    cy.log("Confirmation text " + confirmationText)
-    //You bought EUR 30,000 at a rate of 1.36348 for USD 40,904.4 settling (Spt) 25 Jan.
-
-    textList = confirmationText.split(' ')
-    finalList.push(textList[2])
-    finalList.push(textList[3])
-    finalList.push(textList[8])
-    finalList.push(textList[10])
-    finalList.push(textList[11])
-    finalList.push(textList[14])
-    finalList.push(textList[15])
-    finalList.push(textList[2] + textList[10])
-
-
-    expect(Number(currentPrice)).to.eq(Number(finalList[3]))
-    expect(Number(quantity)).to.eq(Number(finalList[2].replace(/,/g, '')))
-    expect(Math.round(Number(finalAmount))).to.eq(Math.round(Number(finalList[5].replace(/,/g, ''))))
-    expect(currency).to.eq(finalList[8])
-
-
-  })
-
-})
-
-Cypress.Commands.add('VerifyRejectedTradeExecution', (currency, quantity, direction) => {
-
-  var finalList = []
-
-  cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2) div:nth-child(2) input').clear().type(quantity)
-
-  cy.get('div[data-testid="tile-' + currency + '"] > div > div > div:nth-child(2)  > div:nth-child(2) > div > button[direction=' + direction + ']').click({ force: true })
-  cy.wait(2000)
-  // cy.get('html:root').eq(0).invoke('prop', 'innerHTML').then((doc) => {
-  //   cy.writeFile('pageMarkup.html', doc);
-  // });
 
   cy.get('div[data-testid=tile-' + currency + '] div[role=dialog] > div:nth-child(1)').then((el) => {
 
-    var tradeccy = el.text()
+    
 
-    finalList.push(tradeccy.replace('/', ''))
+  //  finalList.push(el.text().replace('/', ''))
 
   })
   cy.get('div[data-testid=tile-' + currency + '] div[role=dialog] > div:nth-child(2)').then((el) => {
 
-    var tradeID = el.text()
-    var tradeIDList = tradeID.split(' ')
+   
+    let tradeIDList = el.text().split(' ')
     finalList.push(tradeIDList[2])
 
   })
   cy.get('div[data-testid=tile-' + currency + '] div[role=dialog] > div[role=alert]').then((el) => {
 
-    var confirmationText = el.text()
+    let confirmationText = el.text()
     cy.log("Confirmation text " + confirmationText)
     //Your trade has been rejected
 
-    var textList = confirmationText.split(' ')
+    let textList = confirmationText.split(' ')
     finalList.push(textList[4])
 
-    expect("rejected").to.eq(finalList[2])
-    expect(currency).to.eq(finalList[0])
+    finalList.push(currentYear)
+    finalList.push(direction)
+    finalList.push(currency)
+    if(direction == 'Buy') {
+    finalList.push(currency.substring(0,3))
+    }
+    else {
+      finalList.push(currency.substring(3,6))
+    }
+    finalList.push(quantity)
+    finalList.push(currentPrice)
+    finalList.push(currentYear)
+    finalList.push('JPW')
+
+    expect("rejected").to.eq(finalList[1])
+    expect(currency).to.eq(finalList[4])
+
+    cy.task('setListTrade',finalList);
+  })
+  
+
+})
+
+
+Cypress.Commands.add('verifyBlotterAfterTrade', (tradeParam) => {
+
+ // cy.get('caption[id=trades-table-heading]+thead th:nth-child(2) div').should('be.visible').click()
+
+  var tradeNumber = 0;
+  const dayjs = require('dayjs')
+  var todayDate = dayjs().subtract(1, 'day').format('DD-MMM-YYYY')  //only for mock
+
+  // capture the last trade id...   better create func..
+  cy.get('caption[id=trades-table-heading]+thead+tbody tr:nth-child(1) td').eq(1).then(el => {
+    tradeNumber = Number(el.text())
+  })
+
+
+  cy.get('caption[id=trades-table-heading]+thead+tbody tr:nth-child(1) td').each((el, index, list) => {
+
+    if (index == 0) {
+       
+    }
+    else {
+
+      // expect(el.text().replace(/,/g,'').toLowerCase()).to.eq(tradeParam[index-1].toString().replace(/,/g,'').toLowerCase())
+      expect(el.text().replace(/,/g,'').replace(/(\.0+|0+)$/, '').toLowerCase()).to.eq(tradeParam[index-1].replace(/,/g,'').replace(/(\.0+|0+)$/, '').toLowerCase())
+      //expect(el.text().replace(/,/g,'').replace(/\.00/g,'').toLowerCase()).to.eq(tradeParam[index-1].replace(/,/g,'').replace(/\.00/g,'').toLowerCase())
+    }
 
   })
 
@@ -145,16 +230,38 @@ Cypress.Commands.add('getTradeCount', () => {
   })
 })
 
-Cypress.Commands.add('VerifyDescSortOnTrade', (name) => {
+Cypress.Commands.add('verifyToggle', () => {
 
-  let listingCount = 0
-  var pos = 0
+  cy.get('div[data-testid="theme-toggle-switch"]').then((el) => {
+  
 
-  // cy.get('caption+thead th:nth-child(2) div:contains("'+name+'")').should('be.visible').click()
-  cy.get('caption+thead th div').each((el, index, list) => {
+    if (el.find('svg[viewBox="0 0 12 12"]').length > 0){
+      cy.get('div[data-testid="theme-toggle-switch"] div').eq(0).click({force:true,multiple:true})
+    
+      cy.get('div[data-testid="theme-toggle-switch"]').click()
+
+      cy.get('svg[viewBox="0 0 14 14"]').should('be.visible')
+      
+     }
+    else {
+      cy.get('div[data-testid="theme-toggle-switch"] div').eq(0).click({force:true,multiple:true})
+    
+      cy.get('div[data-testid="theme-toggle-switch"]').click()
+
+      cy.get('svg[viewBox="0 0 12 12"]').should('be.visible')
+   }
+
+  })
+})
+
+Cypress.Commands.add('ClickForDescSorting',(name) => {
+
+  let pos = 0
+  blotterPage.getAllTradeTableHeader().each((el, index, list) => {
     //     cy.log('hello' +el.text()+" " +name)
     if (el.text() == name) {
       pos = index + 2
+      cy.wrap(pos).as('currentPosition')
       if (el.text() == "Trade ID" || el.text() == "Trade Date" || el.text() == "Value Date") {
         el.click()
       }
@@ -166,31 +273,124 @@ Cypress.Commands.add('VerifyDescSortOnTrade', (name) => {
     }
   })
 
+})
+
+Cypress.Commands.add('ClickForAscSorting',(name) => {
+
+  let pos = 0
+  blotterPage.getAllTradeTableHeader().each((el, index, list) => {
+    //     cy.log('hello' +el.text()+" " +name)
+    if (el.text() == name) {
+      pos = index + 2
+      cy.wrap(pos).as('currentPosition')
+      if (el.text() == "Trade ID" || el.text() == "Trade Date" || el.text() == "Value Date") {
+        el.click()
+        el.click()
+      }
+      else {
+        
+        el.click()
+      }
+      return false;
+    }
+  })
+
+})
+
+Cypress.Commands.add('VerifyDescSortOnTrade', (name) => {
+  let pos = 0;
+  cy.get('@currentPosition').then( position => {
+  pos = position
+  })
+  
+  let d =''
+
+  // cy.get('caption[id=trades-table-heading]+thead th:nth-child(2) div:contains("'+name+'")').should('be.visible').click()
+  // blotterPage.getAllTradeTableHeader().each((el, index, list) => {
+  //   //     cy.log('hello' +el.text()+" " +name)
+  //   if (el.text() == name) {
+  //     pos = index + 2
+  //     if (el.text() == "Trade ID" || el.text() == "Trade Date" || el.text() == "Value Date") {
+  //       el.click()
+  //     }
+  //     else {
+  //       el.click()
+  //       el.click()
+  //     }
+  //     return false;
+  //   }
+  // })
+
   cy.log("").then(() => {
     cy.log("pos " + pos)
-    var prev;
-    cy.get('caption+thead+tbody tr td:nth-child(' + pos + ')').eq(0).then((el) => {
-
+    let prev;
+    blotterPage.getOneTradeTableData(pos).eq(0).then((el) => {
+      
       prev = el.text()
     })
     cy.log("").then(() => {
-      cy.get('caption+thead+tbody tr td:nth-child(' + pos + ')').each((el, index1, list) => {
+      blotterPage.getOneTradeTableData(pos).each((el, index1, list) => {
 
-        if (index1 < 5) {
-          cy.log("current values " + el.text() + "prev " + prev)
-          if (prev < el.text()) {
-            cy.log("list is not in Descneding sort order")
-            expect("list should be in Desc order").to.eq("list not in Desc order")
+        if (name == "Trade Date" || name == "Value Date") {
+          const dayjs = require('dayjs')
+          d = dayjs(el.text()).format('YYYY-MM-DD')
+          prev = d
+        }
+       
+         else {
+          d = el.text()
+        }
+        switch (name) {
+          case 'Notional':
+          case 'Trade ID':
+          case 'Rate':
+          case 'Trade Date':
+          case 'Value Date':    
+          if (index1 < 5) {
+            cy.log("current values " + d + "prev " + prev)
+            //    cy.log("equals "+ Number(d.replace(/[,-]/g,''))+"  "+Number(value.replace(/[,-]/g,'')))
+            if (Number(d.replace(/[,-]/g, '')) > Number(prev.replace(/[,-]/g, ''))) {
+              cy.log("list is not in Descneding sort order")
+              expect("list should be in Desc order").to.eq("list not in Desc order")
+              return false;
+            }
+            else {
+              prev = el.text()
+            }
+          }
+          if (index1 == 5) {
+            expect("list is in Desc order").to.eq("list is in Desc order")
             return false;
           }
-          else {
-            prev = el.text()
-          }
+  
+  
+            break;
+  
+          default:
+            if (index1 < 5) {
+              cy.log("current values " + el.text() + "prev " + prev)
+           
+              if (el.text() > prev ) {
+                cy.log("list is not in Descneding sort order")
+                expect("list should be in Desc order").to.eq("list not in Desc order")
+                return false;
+              }
+              else {
+                prev = el.text()
+              }
+            }
+            if (index1 == 5) {
+              expect("list is in Desc order").to.eq("list is in Desc order")
+              return false;
+            }
+  
+  
+            break;
+  
+        
         }
-        if (index1 == 5) {
-          expect("list is in Desc order").to.eq("list is in Desc order")
-          return false;
-        }
+       
+  
       })
     })
   })
@@ -198,65 +398,99 @@ Cypress.Commands.add('VerifyDescSortOnTrade', (name) => {
 
 Cypress.Commands.add('VerifyAscSortOnTrade', (name) => {
 
-  let listingCount = 0
-  var pos = 0
+  
+  let pos = 0
+  cy.get('@currentPosition').then( position => {
+    pos = position
+    })
+    
+  let d =''
 
-  // cy.get('caption+thead th:nth-child(2) div:contains("'+name+'")').should('be.visible').click()
-  cy.get('caption+thead th div').each((el, index, list) => {
-    //     cy.log('hello' +el.text()+" " +name)
-    if (el.text() == name) {
-      pos = index + 2
-      if (el.text() == "Trade ID" || el.text() == "Trade Date" || el.text() == "Value Date") {
-        el.click()
-        el.click()
-      }
-      else {
-        el.click()
-      }
-      return false;
-    }
-  })
+  // cy.get('caption[id=trades-table-heading]+thead th:nth-child(2) div:contains("'+name+'")').should('be.visible').click()
+  // blotterPage.getAllTradeTableHeader().each((el, index, list) => {
+  //   if (el.text() == name) {
+  //     pos = index + 2
+  //     if (el.text() == "Trade ID" || el.text() == "Trade Date" || el.text() == "Value Date") {
+  //       el.click()
+  //       el.click()
+  //     }
+  //     else {
+  //       el.click()
+  //     }
+  //     return false;
+  //   }
+  // })
 
   cy.log("").then(() => {
     cy.log("pos " + pos)
-    var prev;
-    cy.get('caption+thead+tbody tr td:nth-child(' + pos + ')').eq(0).then((el) => {
-
+    let prev;
+    blotterPage.getOneTradeTableData(pos).eq(0).then((el) => {
+      
       prev = el.text()
     })
     cy.log("").then(() => {
-      cy.get('caption+thead+tbody tr td:nth-child(' + pos + ')').each((el, index1, list) => {
+      blotterPage.getOneTradeTableData(pos).each((el, index1, list) => {
 
-        if (index1 < 5) {
-          cy.log("current values " + el.text() + "prev " + prev)
-          if (pos == 8) {
-            if (Number(prev.replace(',', '')) > Number(el.text().replace(',', ''))) {
+        if (name == "Trade Date" || name == "Value Date") {
+          const dayjs = require('dayjs')
+          d = dayjs(el.text()).format('YYYY-MM-DD')
+          prev = d
+        }
+       
+         else {
+          d = el.text()
+        }
+        switch (name) {
+          case 'Notional':
+          case 'Trade ID':
+          case 'Rate':
+          case 'Trade Date':
+          case 'Value Date':    
+          if (index1 < 5) {
+            cy.log("current values " + d + "prev " + prev)
+            //    cy.log("equals "+ Number(d.replace(/[,-]/g,''))+"  "+Number(value.replace(/[,-]/g,'')))
+            if (Number(d.replace(/[,-]/g, '')) < Number(prev.replace(/[,-]/g, ''))) {
               cy.log("list is not in Ascending sort order")
-              expect("list should be in Acs order").to.eq("list not in Asc Order")
+              expect("list should be in Asc order").to.eq("list not in Asc order")
               return false;
             }
             else {
               prev = el.text()
             }
           }
-
-          else {
-
-            if (prev > el.text()) {
-              cy.log("list is not in Ascending sort order")
-              expect("list should be in Acs order").to.eq("list not in Asc Order")
+          if (index1 == 5) {
+            expect("list is in Asc order").to.eq("list is in Asc order")
+            return false;
+          }
+  
+  
+            break;
+  
+          default:
+            if (index1 < 5) {
+              cy.log("current values " + el.text() + "prev " + prev)
+           
+              if (el.text() < prev ) {
+                cy.log("list is not in Ascending sort order")
+                expect("list should be in Asc order").to.eq("list not in Asc order")
+                return false;
+              }
+              else {
+                prev = el.text()
+              }
+            }
+            if (index1 == 5) {
+              expect("list is in Asc order").to.eq("list is in Asc order")
               return false;
             }
-            else {
-              prev = el.text()
-            }
-          }
-
+  
+  
+            break;
+  
+        
         }
-        if (index1 == 5) {
-          expect("list is in Asc order").to.eq("list is in Asc order")
-          return false;
-        }
+       
+  
       })
     })
   })
@@ -264,17 +498,17 @@ Cypress.Commands.add('VerifyAscSortOnTrade', (name) => {
 
 Cypress.Commands.add('VerifyCheckboxSearchOnTrade', (header, value, search = null) => {
 
-  let listingCount = 0
-  var pos = 0
+  
+  let pos = 0
 
-  // cy.get('caption+thead th:nth-child(2) div:contains("'+name+'")').should('be.visible').click()
-  cy.get('caption+thead th div').each((el, index, list) => {
+  // cy.get('caption[id=trades-table-heading]+thead th:nth-child(2) div:contains("'+name+'")').should('be.visible').click()
+  blotterPage.getAllTradeTableHeader().each((el, index, list) => {
     //     cy.log('hello' +el.text()+" " +name)
     if (el.text() == header) {
       pos = index + 2
 
-      cy.get('caption+thead th:nth-child(' + pos + ') div').trigger('mouseover')
-      cy.get('caption+thead th:nth-child(' + pos + ') div svg').click({ force: true, multiple: true })
+      blotterPage.getOneTableHeader(pos).trigger('mouseover')
+      blotterPage.getCheckboxFilterIcon(pos).click({ force: true, multiple: true })
 
       return false;
     }
@@ -282,36 +516,30 @@ Cypress.Commands.add('VerifyCheckboxSearchOnTrade', (header, value, search = nul
 
   cy.log(value).then(() => {
 
-    cy.get('caption+thead th:nth-child(' + pos + ') div span:nth-child(3) div div').each((el1, index1, list) => {
-      var flag = true;
+    blotterPage.getListOfSearchCriteria(pos).each((el1, index1, list) => {
+      let flag = true;
       if (el1.text() == value) {
         if (search != null) {
-          cy.get('caption+thead th:nth-child(' + pos + ') div span:nth-child(3) div input').clear().type(value)
-          cy.get('caption+thead th:nth-child(' + pos + ') div').eq(0).click({ force: true })
+          blotterPage.getSearchFieldUnderDropDown(pos).clear().type(value)
+          blotterPage.getOneTableHeader(pos).eq(0).click({ force: true })
         }
         else {
 
           el1.click();
-          cy.get('caption+thead th:nth-child(' + pos + ') div').eq(0).click({ force: true })
+          blotterPage.getOneTableHeader(pos).eq(0).click({ force: true })
 
         }
-        cy.get('caption+thead+tbody tr td:nth-child(' + pos + ')').each((el, index1, list) => {
+        blotterPage.getOneTradeTableData(pos).each((el, index1, list) => {
           if (el.text() != value) {
             flag = false;
-            //  cy.get('caption+thead th:nth-child('+pos+') div').trigger('mouseover')
-            //   cy.get('caption+thead th:nth-child('+pos+') div svg').click({force:true,multiple:true})
-            //   el1.click();
-            //   cy.get('caption+thead th:nth-child('+pos+') div').eq(0).click({force:true})
+         
             expect("filter should happen correctly").to.eq("filter did not happen correctly")
 
             return false;
           }
         })
         if (flag == true) {
-          // cy.get('caption+thead th:nth-child('+pos+') div').trigger('mouseover')
-          // cy.get('caption+thead th:nth-child('+pos+') div svg').click({force:true,multiple:true})
-          // el1.click();
-          // cy.get('caption+thead th:nth-child('+pos+') div').eq(0).click({force:true})
+ 
           expect("filter worked fine").to.eq("filter worked fine")
           return false;
         }
@@ -328,31 +556,30 @@ Cypress.Commands.add('VerifyCheckboxSearchOnTrade', (header, value, search = nul
 Cypress.Commands.add('verifyCheckboxSearchforNumbers', (header, condition, value) => {
 
   let listingCount = 0
-  var pos = 0
+  let pos = 0
 
 
-  cy.get('caption+thead th div').each((el, index, list) => {
-    //     cy.log('hello' +el.text()+" " +name)
+  blotterPage.getAllTradeTableHeader().each((el, index, list) => {
     if (el.text() == header) {
       pos = index + 2
 
-      cy.get('caption+thead th:nth-child(' + pos + ') div').trigger('mouseover')
-      cy.get('caption+thead th:nth-child(' + pos + ') div svg').click({ force: true, multiple: true })
+      blotterPage.getOneTableHeader(pos).trigger('mouseover')
+      blotterPage.getCheckboxFilterIcon(pos).click({ force: true, multiple: true })
 
       return false;
     }
   })
 
   cy.log(value).then(() => {
-    cy.get('caption+thead th:nth-child(' + pos + ') div span:nth-child(3) div select').select(condition)
+    blotterPage.getSelectOptionForCheckBox(pos).select(condition)
 
-    var flag = true;
-    var d = '';
+    let flag = true;
+    let d = '';
 
-    cy.get('caption+thead th:nth-child(' + pos + ') div span:nth-child(3) div input').clear({ force: true }).type(value, { force: true })
-    cy.get('caption+thead th:nth-child(' + pos + ') div').eq(0).click({ force: true })
+    blotterPage.getSearchFieldUnderDropDown(pos).clear({ force: true }).type(value, { force: true })
+    blotterPage.getOneTableHeader(pos).eq(0).click({ force: true })
 
-    cy.get('caption+thead+tbody tr td:nth-child(' + pos + ')').each((el, index1, list) => {
+    blotterPage.getOneTradeTableData(pos).each((el, index1, list) => {
 
       if (header == "Trade Date" || header == "Value Date") {
         const dayjs = require('dayjs')

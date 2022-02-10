@@ -1,4 +1,6 @@
 import { clear } from "console"
+import CommonPage from '../pages/CommonPage'
+
 
 describe("Trades", () => {
 
@@ -90,37 +92,115 @@ describe("Trades", () => {
   var filterOptions = ["Buy", "Sell", "Done", "Pending", "2022/01/14"]
 
 
-
   before(() => {
-    cy.visit("http://localhost:1929")
+    cy.visit("http://localhost:1921")
     //cy.visit("https://web.uat.reactivetrader.com/")
     //cy.visit("https://web.prod.reactivetrader.com/")
-    //cy.visit("https://reactivetrader.com/")
+    //cy.visit("https://reactivetrader.com/"
+  })
+
+  it("Should be able to perform the toggle operation", () => {
+
+    cy.verifyToggle();
+    cy.wait(3000)
+    cy.verifyToggle();
+  })
+
+  it("Should Verify the Trade Data after the Trade operation", () => {
+
+    cy.VerifySuccessTradeExecution("GBPUSD", 30000, "Buy")
+    cy.task('getListTrade').then((trade) => {
+      cy.log('list if trade ' + trade)
+      cy.verifyBlotterAfterTrade(trade);
+    })
+
+
+    cy.VerifyRejectedTradeExecution("GBPJPY", 50000, "Sell")
+    cy.task('getListTrade').then((trade) => {
+      cy.log('list if trade ' + trade)
+      cy.verifyBlotterAfterTrade(trade);
+    })
+
+    cy.VerifySuccessTradeExecution("EURJPY", 50000, "Sell")
+    cy.task('getListTrade').then((trade) => {
+      cy.log('list if trade ' + trade)
+      cy.verifyBlotterAfterTrade(trade);
+    })
+
+
+    cy.VerifySuccessTradeExecution("EURCAD", 50000, "Sell")
+    cy.task('getListTrade').then((trade) => {
+      cy.log('list if trade ' + trade)
+      cy.verifyBlotterAfterTrade(trade);
+    })
 
 
 
+
+    // capture latest trade id, and assert that new trade id is  +1 to prev 
 
   })
 
-  it.only("Should be able to perform trade execution", () => {
-  // var list = cy.VerifyTradeExecution("EURUSD",30000,"BUY")
-  //  for(var i=0;i<list.length;i++) {
-  //   cy.log("from test class "+list[i])
-  //   }
+  it("Should be able to perform Buy EUR/USD trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURUSD", 30000, "BUY")
+  })
+  it("Should be able to perform Buy USD/JPY trade execution", () => {
+    cy.VerifySuccessTradeExecution("USDJPY", 40000, "BUY")
+  })
+  it("Should be able to perform Buy GBP/USD trade execution", () => {
+    cy.VerifySuccessTradeExecution("GBPUSD", 50000, "BUY")
+  })
+  it("Should be able to perform Buy GBP/JPY trade execution", () => {
+    cy.VerifyRejectedTradeExecution("GBPJPY", 50000, "BUY")
+  })
+  it("Should be able to perform Buy EUR/JPY trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURJPY", 50000, "BUY")
+  })
+  //cy.VerifySuccessTradeExecution("AUDUSD",50000,"BUY")
+  it("Should be able to perform Buy EUR/CAD trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURCAD", 50000, "BUY")
+  })
+  it("Should be able to perform Buy EUR/AUD trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURAUD", 50000, "BUY")
+    //cy.VerifySuccessTradeExecution("NZDUSD", 50000, "BUY")
+  })
 
-// positive scenarios
-  cy.VerifySuccessTradeExecution("EURUSD",30000,"BUY")
-  cy.VerifySuccessTradeExecution("USDJPY",40000,"BUY")
-  cy.VerifySuccessTradeExecution("GBPUSD",50000,"SELL")
-  cy.VerifyRejectedTradeExecution("GBPJPY",50000,"SELL")
+  it("Should be able to perform Sell GBP/USD trade execution", () => {
+    // positive scenarios
+    cy.VerifySuccessTradeExecution("GBPUSD", 50000, "SELL")
+  })
+  it("Should be able to perform Sell GBP/JPY trade execution", () => {
+    cy.VerifyRejectedTradeExecution("GBPJPY", 50000, "SELL")
+  })
+  it("Should be able to perform Sell EUR/JPY trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURJPY", 50000, "SELL")
+  })
+  //cy.VerifySuccessTradeExecution("AUDUSD",50000,"SELL")
+  //cy.VerifySuccessTradeExecution("NZDUSD",50000,"SELL")
+  it("Should be able to perform Sell EUR/CAD trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURCAD", 50000, "SELL")
+  })
+  it("Should be able to perform Sell EUR/AUD trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURAUD", 50000, "SELL")
+  })
 
-  //negative scenarios - just to show that code will identify any anamoly
- // cy.VerifyRejectedTradeExecution("EURUSD",10000,"SELL")
- // cy.VerifySuccessTradeExecution("GBPJPY",30000,"BUY")
+  it("Should be able to perform Sell EUR/USD trade execution", () => {
+    cy.VerifySuccessTradeExecution("EURUSD", 30000, "SELL")
+  })
+
+  it("Should be able to perform Sell USD/JPY trade execution", () => {
+    cy.VerifySuccessTradeExecution("USDJPY", 40000, "SELL")
+
+
+
+
+    //negative scenarios - just to show that code will identify any anamoly
+    // cy.VerifyRejectedTradeExecution("EURUSD",10000,"SELL")
+    // cy.VerifySuccessTradeExecution("GBPJPY",30000,"BUY")
 
   })
 
-  it("Should verify elements the number of elements in the blotter", () => {
+  it.skip("Should verify elements the number of elements in the blotter", () => {
 
     //  funtion filtrbydirection(buy or sell)
     //function fitlerbyState()
@@ -177,116 +257,120 @@ describe("Trades", () => {
   })
 
 
-  it("should verify the number of rcords based on checkbox filter", () => {
-  //  for all click on icon and select one or many.. to max the records.. 
-    cy.VerifyCheckboxSearchOnTrade("Status","Done")
+  it("should verify the number of records based on checkbox filter", () => {
+    //  for all click on icon and select one or many.. to max the records.. 
+    //  for all click on icon and select one or many.. to max the records.. 
+    //  for all click on icon and select one or many.. to max the records.. 
+    cy.VerifyCheckboxSearchOnTrade("Status", "Done")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("Trader","JPW")
+    cy.VerifyCheckboxSearchOnTrade("Trader", "JPW")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("Status","Done","search")
+    cy.VerifyCheckboxSearchOnTrade("Status", "Done", "search")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("Status","Rejected")
+    cy.VerifyCheckboxSearchOnTrade("Status", "Rejected")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("Direction","Buy")
+    cy.VerifyCheckboxSearchOnTrade("Direction", "Buy")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("Direction","Sell")
+    cy.VerifyCheckboxSearchOnTrade("Direction", "Sell")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("Deal CCY","USD")
+    cy.VerifyCheckboxSearchOnTrade("Deal CCY", "USD")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("CCYCCY","EURUSD")
+    cy.VerifyCheckboxSearchOnTrade("CCYCCY", "EURUSD")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("CCYCCY","EURUSD")
+    cy.VerifyCheckboxSearchOnTrade("CCYCCY", "EURUSD")
     cy.reload()
-    cy.VerifyCheckboxSearchOnTrade("Trader","JPW","search")
+    cy.VerifyCheckboxSearchOnTrade("Trader", "JPW", "search")
     cy.reload()
-    cy.verifyCheckboxSearchforNumbers("Trade ID","Less than","2795")
-    cy.verifyCheckboxSearchforNumbers("Trade ID","Greater than","2795")
-     cy.verifyCheckboxSearchforNumbers("Notional","Equals", "1000000")
-     cy.reload()
-     cy.verifyCheckboxSearchforNumbers("Rate","Equals", "139.223")
-     cy.verifyCheckboxSearchforNumbers("Rate","Greater than", "139.223")
-     cy.verifyCheckboxSearchforNumbers("Rate","Less than", "139.223")
-     cy.reload()
-     cy.verifyCheckboxSearchforNumbers("Trade Date","Equals", "2022-01-21")
-     cy.verifyCheckboxSearchforNumbers("Trade Date","Less than", "2022-01-12")
-     cy.verifyCheckboxSearchforNumbers("Trade Date","Greater than", "2022-01-23")
-     cy.reload()
-     cy.verifyCheckboxSearchforNumbers("Value Date","Equals", "2022-01-21")
-     cy.verifyCheckboxSearchforNumbers("Value Date","Less than", "2022-01-12")
-     cy.verifyCheckboxSearchforNumbers("Value Date","Greater than", "2022-01-23")
-   
+    cy.verifyCheckboxSearchforNumbers("Trade ID", "Less than", "2795")
+    cy.verifyCheckboxSearchforNumbers("Trade ID", "Greater than", "2795")
+    cy.reload()
+    cy.verifyCheckboxSearchforNumbers("Notional", "Equals", "50000")
+    cy.reload()
+    cy.verifyCheckboxSearchforNumbers("Rate", "Equals", "139.033")
+    cy.verifyCheckboxSearchforNumbers("Rate", "Greater than", "139.033")
+    cy.verifyCheckboxSearchforNumbers("Rate", "Less than", "139.033")
+    cy.reload()
+    cy.verifyCheckboxSearchforNumbers("Trade Date", "Equals", "2022-01-30")
+    cy.verifyCheckboxSearchforNumbers("Trade Date", "Less than", "2022-01-31")
+    cy.verifyCheckboxSearchforNumbers("Trade Date", "Greater than", "2022-01-29")
+    cy.reload()
+    cy.verifyCheckboxSearchforNumbers("Value Date", "Equals", "2022-01-30")
+    cy.verifyCheckboxSearchforNumbers("Value Date", "Less than", "2022-01-31")
+    cy.verifyCheckboxSearchforNumbers("Value Date", "Greater than", "2022-01-29")
+
 
 
   })
 
-  it("should verify order  of rcords based on sort selection", () => {
+  it("should verify order of records based on Trade Date column sort selection", () => {
     //for all click on sort icon for every header and verify if its sorted alphabetically or in ascending or descending order
-  
-//desceding check
+
+    //desceding check
     cy.reload();
     cy.VerifyDescSortOnTrade("Trade Date")
-    cy.VerifyDescSortOnTrade("Direction")
-    cy.VerifyDescSortOnTrade("Status")
-    cy.VerifyDescSortOnTrade("Trade ID")
-    cy.VerifyDescSortOnTrade("Rate")
-    cy.VerifyDescSortOnTrade("Deal CCY")
-    cy.VerifyDescSortOnTrade("Notional")
-
-    cy.reload();
-
-//ascending check
     cy.VerifyAscSortOnTrade("Trade Date")
+  })
+
+
+  it("should verify order of records based on Direction Column sort selection", () => {
+    cy.reload();
+    cy.VerifyDescSortOnTrade("Direction")
     cy.VerifyAscSortOnTrade("Direction")
+  })
+
+  it("should verify order of records based on Status column sort selection", () => {
+    cy.reload();
+    cy.VerifyDescSortOnTrade("Status")
     cy.VerifyAscSortOnTrade("Status")
+  })
+
+  it("should verify order of records based on Trade ID sort selection", () => {
+    cy.reload();
+    cy.VerifyDescSortOnTrade("Trade ID")
     cy.VerifyAscSortOnTrade("Trade ID")
+  })
+
+  it("should verify order of records based on Rate sort selection", () => {
+    cy.reload();
+    cy.VerifyDescSortOnTrade("Rate")
     cy.VerifyAscSortOnTrade("Rate")
+  })
+
+  it("should verify order of records based on Deal CCY sort selection", () => {
+    cy.reload();
+    cy.VerifyDescSortOnTrade("Deal CCY")
     cy.VerifyAscSortOnTrade("Deal CCY")
+  })
+
+  it("should verify order of records based on Notional Cloumn sort selection", () => {
+    cy.reload();
+    cy.VerifyDescSortOnTrade("Notional")
     cy.VerifyAscSortOnTrade("Notional")
 
 
-    // sortbyDirection(Buy)
-    //sortBYStatus(Done)
+
+    // // //ascending check
+    // it("should verify order of records based on sort selection", () => {
+    //   cy.reload();
+    // it("should verify order of records based on sort selection", () => {
+    //   cy.reload();
+    // it("should verify order of records based on sort selection", () => {
+    //   cy.reload();
+    // it("should verify order of records based on sort selection", () => {
+    //   cy.reload();
+    // it("should verify order of records based on sort selection", () => {
+    //   cy.reload();
+    // it("should verify order of records based on sort selection", () => {
+    //   cy.reload();
+    // it("should verify order of records based on sort selection", () => {
+    //   cy.reload();
+
+
+
 
   })
 
-  it("Should Verify the Trade Data after the Trade operation", () => {
-    cy.reload();
 
-    cy.get('caption+thead th:nth-child(2) div').should('be.visible').click()
-
-    var tradeNumber = 0;
-    const dayjs = require('dayjs')
-    var todayDate = dayjs().subtract(1,'day').format('DD-MMM-YYYY')  //only for mock
-
-    // capture the last trade id...   better create func..
-    cy.get('caption[id=trades-table-heading]+thead+tbody tr:nth-child(1) td').eq(1).then(el => {
-      tradeNumber = Number(el.text())
-    })
-
-
-    // TBD  we will call trade execution function...  be it sell or buy..  and that function will rturn a list of all prices, date, type... 
-    var trade = ["", "", "Rejected", "", "Buy", "EURAUD", "EUR", "1,000,000", "1.52691", "", "JPW"]
-
-    cy.get('caption[id=trades-table-heading]+thead+tbody tr:nth-child(1) td').each((el, index, list) => {
-
-      if (index == 1) {
-        expect(tradeNumber).to.eq(Number(el.text()))    //mock 
-        //expect(tradeNumber+1).to.eq(Number(el.text()))     //real 
-      }
-      else if (index == 3 || index == 9) {
-        expect(todayDate).to.eq(el.text())
-      }
-
-      else {
-        expect(trade[index]).to.eq(el.text())
-      }
-
-    })
-
-
-    // capture latest trade id, and assert that new trade id is  +1 to prev 
-
-  })
 
 
   it("Should download .CSV file", () => {
@@ -302,7 +386,7 @@ describe("Trades", () => {
   })
 
   it("Should be able to cancel the search filter by clicking on 'X'", () => {
-    cy.get('[data-qa="quick-filter__filter-clear-icon"]').click()
+    cy.get('[data-qa="quick-filter__filter-clear-icon"]').should('be.visible').click()
   })
 })
 

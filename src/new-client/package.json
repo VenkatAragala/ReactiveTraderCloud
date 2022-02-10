@@ -41,6 +41,10 @@
     "storybook": "start-storybook -s ./public -p 6006",
     "build-storybook": "build-storybook"
   },
+
+  "cypress-cucumber-preprocessor": {
+    "nonGlobalStepDefinitions": true
+  },
   "dependencies": {
     "@adaptive/hydra-platform": "^3.32.0",
     "@finos/fdc3": "^1.2.0",
