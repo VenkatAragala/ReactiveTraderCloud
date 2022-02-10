@@ -4,7 +4,7 @@ import { Given, When, Then } from 'cypress-cucumber-preprocessor/steps'
 Given('User is on Home page', () => {
 
     //cy.visit("https://web.prod.reactivetrader.com/")
-    cy.visit("http://localhost:1922")
+    cy.visit("http://localhost:1917")
 
 
 

@@ -94,7 +94,7 @@ Cypress.Commands.add('VerifySuccessTradeExecution', (combination, quantity, dire
     finalList.push(textList[14]+"-"+textList[15].replace('.','')+"-"+currentYear)
     finalList.push(direction)
     finalList.push(textList[2] + textList[10])
-    if(direction == 'Buy') {
+    if(direction.toLowerCase() == 'buy') {
     finalList.push(textList[2])
     }
     else {
@@ -168,7 +168,7 @@ Cypress.Commands.add('VerifyRejectedTradeExecution', (currency, quantity, direct
     finalList.push(currentYear)
     finalList.push(direction)
     finalList.push(currency)
-    if(direction == 'Buy') {
+    if(direction.toLowerCase() == 'buy') {
     finalList.push(currency.substring(0,3))
     }
     else {
@@ -208,11 +208,14 @@ Cypress.Commands.add('verifyBlotterAfterTrade', (tradeParam) => {
     if (index == 0) {
        
     }
-    else {
+    else if(index == 8) {
 
-      // expect(el.text().replace(/,/g,'').toLowerCase()).to.eq(tradeParam[index-1].toString().replace(/,/g,'').toLowerCase())
-      expect(el.text().replace(/,/g,'').replace(/(\.0+|0+)$/, '').toLowerCase()).to.eq(tradeParam[index-1].replace(/,/g,'').replace(/(\.0+|0+)$/, '').toLowerCase())
+      expect(Number(el.text().replace(/,/g,''))).to.eq(Number(tradeParam[index-1].toString().replace(/,/g,'')))
+      //expect(el.text().replace(/,/g,'').replace(/(\.0+|0+)$/, '').toLowerCase()).to.eq(tradeParam[index-1].replace(/,/g,'').replace(/(\.0+|0+)$/, '').toLowerCase())
       //expect(el.text().replace(/,/g,'').replace(/\.00/g,'').toLowerCase()).to.eq(tradeParam[index-1].replace(/,/g,'').replace(/\.00/g,'').toLowerCase())
+    }
+    else {
+      expect(el.text().replace(/,/g,'').toLowerCase()).to.eq(tradeParam[index-1].toString().replace(/,/g,'').toLowerCase())
     }
 
   })
